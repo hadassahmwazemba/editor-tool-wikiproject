@@ -4,7 +4,7 @@ import altair as alt
 import zipfile
 import io
 
-# --- Page Config ---
+# page config
 st.set_page_config(
     page_title="WikiProject Africa | Translation Tool", 
     page_icon="",
@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="expanded" 
 )
 
-# --- Custom Styling (Matches your Editor Tool) ---
+# custom styling section
 st.markdown("""
     <style>
     [data-testid="stMainViewContainer"] > section > div {
@@ -61,7 +61,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- Data Loading (Zip Reader) ---
+# load data
 @st.cache_data
 def load_data():
     zip_path = "data/african_countries_dpdp_views.zip"
@@ -76,13 +76,13 @@ def load_data():
 
 df = load_data()
 
-# --- Main Dashboard Logic ---
+# main dashboard
 if not df.empty:
     st.title("WikiProject Africa: Translation Tool")
     st.markdown("### Identifying high-traffic content for localization")
     st.divider()
 
-    # --- ROW 1: Selection and Info Box ---
+    # selection
     col_filters, col_info = st.columns([1.5, 1], gap="large")
 
     with col_filters:
@@ -90,11 +90,11 @@ if not df.empty:
         countries = sorted(df['Country'].unique())
         selected_country = st.selectbox("Select Target Country:", options=countries)
         
-        # 1. FILTER: Isolate Non-Native views for the selected country
+        
         mask = (df['Country'] == selected_country) & (df['Native'] == 'Non-Native')
         translation_demand = df[mask].copy()
         
-        # 2. AGGREGATE: Group by Item_ID to get total impact
+        #aggregating
         aggregated = translation_demand.groupby('Item_ID').agg({
             'Page_Title': 'first',
             'language': 'first',
@@ -102,7 +102,7 @@ if not df.empty:
             'Views': 'sum'
         }).reset_index().sort_values(by='Views', ascending=False)
 
-        # 3. FIXED LINK BUILDING: Added .org suffix
+        #links
         def make_wiki_link(row):
             # Formats: https://en.wikipedia.org/wiki/Article_Name
             # Assuming 'Project' is 'en.wikipedia', we add '.org'
@@ -113,7 +113,6 @@ if not df.empty:
         aggregated['wiki_url'] = aggregated.apply(make_wiki_link, axis=1)
 
     with col_info:
-        # Dynamic extraction of languages being read
         source_langs = sorted(aggregated['language'].unique())
         lang_string = ", ".join(source_langs) if source_langs else "None found"
         lang_count = len(source_langs)
@@ -128,7 +127,7 @@ if not df.empty:
             </div>
             """, unsafe_allow_html=True)
 
-    # --- ROW 2: Impact Metrics ---
+    # impact metrics section
     st.markdown("### Impact Metrics")
     m1, m2, m3 = st.columns(3)
     
@@ -142,7 +141,7 @@ if not df.empty:
 
     st.divider()
 
-    # --- ROW 3: Table with Wikipedia Links ---
+    # article table
     st.markdown(f"### Articles Recommended for Translation: {selected_country}")
     
     st.dataframe(
@@ -163,7 +162,7 @@ if not df.empty:
         }
     )
 
-    # --- ROW 4: Visualizing Top 15 ---
+    # visualization of 10 15 articles
     if not aggregated.empty:
         st.divider()
         st.markdown("### View Distribution (Top 15 Articles)")
