@@ -109,7 +109,7 @@ df, quality_order, importance_order = load_data()
 # --- Main Dashboard ---
 if not df.empty:
     st.title("WikiProject Africa: Article Improvement Editor Tool")
-    st.markdown(f"### Analyzing {len(df):,} articles")
+    st.markdown(f"### Analyzing {len(df):,} articles for article improvement")
     st.divider()
 
     # --- ROW 1: Selection and Info Box (Side-by-Side) ---

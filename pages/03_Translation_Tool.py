@@ -79,7 +79,7 @@ df = load_data()
 # main dashboard
 if not df.empty:
     st.title("WikiProject Africa: Translation Tool")
-    st.markdown("### Identifying high-traffic content for localization")
+    st.markdown("### Identifying high-traffic content for local-language translation")
     st.divider()
 
     # selection
