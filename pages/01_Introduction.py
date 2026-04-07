@@ -6,7 +6,7 @@ st.set_page_config(page_title="Introduction", layout="wide", initial_sidebar_sta
 st.title("WikiProject Africa: Editorial Prioritization Tool")
 
 st.markdown("""
-**by: Hadassah Mpare** \n
+**by: Hadassah Mwazemba** \n
 *Advised by: Professor Eni Mustafaraj*
 """)
 

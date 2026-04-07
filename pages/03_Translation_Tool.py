@@ -7,7 +7,7 @@ import io
 # page config
 st.set_page_config(
     page_title="WikiProject Africa | Translation Tool", 
-    page_icon="",
+    page_icon="🌍",
     layout="wide", 
     initial_sidebar_state="expanded" 
 )
@@ -86,15 +86,15 @@ if not df.empty:
     col_filters, col_info = st.columns([1.5, 1], gap="large")
 
     with col_filters:
-        st.markdown("### Filter by Region:")
+        st.markdown("### Filter Results")
         countries = sorted(df['Country'].unique())
-        selected_country = st.selectbox("Select Target Country:", options=countries)
+        selected_country = st.selectbox("1. Select Target Country:", options=countries)
         
-        
+        # Filter for the selected country first
         mask = (df['Country'] == selected_country) & (df['Native'] == 'Non-Native')
         translation_demand = df[mask].copy()
         
-        #aggregating
+        # Aggregating to unique articles
         aggregated = translation_demand.groupby('Item_ID').agg({
             'Page_Title': 'first',
             'language': 'first',
@@ -102,25 +102,40 @@ if not df.empty:
             'Views': 'sum'
         }).reset_index().sort_values(by='Views', ascending=False)
 
-        #links
+        # NEW: Source Language Filter
+        available_languages = sorted(aggregated['language'].unique())
+        selected_langs = st.multiselect(
+            "2. Filter by Source Language:", 
+            options=available_languages,
+            default=available_languages
+        )
+
+        # Apply the language sub-filter
+        if selected_langs:
+            aggregated = aggregated[aggregated['language'].isin(selected_langs)]
+        else:
+            st.warning("Please select at least one language.")
+            aggregated = pd.DataFrame(columns=aggregated.columns)
+
+        # Generate Wiki Links
         def make_wiki_link(row):
-            # Formats: https://en.wikipedia.org/wiki/Article_Name
-            # Assuming 'Project' is 'en.wikipedia', we add '.org'
             base = f"https://{row['Project']}.org/wiki/"
             clean_title = str(row['Page_Title']).replace(" ", "_")
             return base + clean_title
 
-        aggregated['wiki_url'] = aggregated.apply(make_wiki_link, axis=1)
+        if not aggregated.empty:
+            aggregated['wiki_url'] = aggregated.apply(make_wiki_link, axis=1)
 
     with col_info:
-        source_langs = sorted(aggregated['language'].unique())
-        lang_string = ", ".join(source_langs) if source_langs else "None found"
-        lang_count = len(source_langs)
+        # Update display info based on filtered data
+        final_langs = sorted(aggregated['language'].unique()) if not aggregated.empty else []
+        lang_string = ", ".join(final_langs) if final_langs else "No languages selected"
+        lang_count = len(final_langs)
 
         st.markdown(f"""
             <div class="target-card">
                 <h3>DEMAND IN: {selected_country}</h3>
-                <div class="target-label">Source Languages ({lang_count})</div>
+                <div class="target-label">Filtered Source Languages ({lang_count})</div>
                 <div class="target-value">{lang_string}</div>
                 <div class="target-label">Action</div>
                 <div class="target-value">Translate the articles below to increase local language coverage.</div>
@@ -131,12 +146,12 @@ if not df.empty:
     st.markdown("### Impact Metrics")
     m1, m2, m3 = st.columns(3)
     
-    total_views = aggregated['Views'].sum()
+    total_views = aggregated['Views'].sum() if not aggregated.empty else 0
     unique_items = len(aggregated)
     avg_impact = aggregated['Views'].mean() if unique_items > 0 else 0
 
     m1.metric("Articles to Translate", f"{unique_items:,}")
-    m2.metric("Non-Native Language Articles Total Pageviews", f"{int(total_views):,}")
+    m2.metric("Total Potential Reach (Views)", f"{int(total_views):,}")
     m3.metric("Avg Views/Article", f"{int(avg_impact):,}")
 
     st.divider()
@@ -144,28 +159,28 @@ if not df.empty:
     # article table
     st.markdown(f"### Articles Recommended for Translation: {selected_country}")
     
-    st.dataframe(
-        aggregated[['Page_Title', 'Views', 'language', 'wiki_url']],
-        use_container_width=True,
-        hide_index=True,
-        height=400,
-        column_config={
-            "Page_Title": st.column_config.TextColumn("Article Title"),
-            "language": st.column_config.TextColumn("Source Language"),
-            "wiki_url": st.column_config.LinkColumn("Read Original", display_text="Link"),
-            "Views": st.column_config.ProgressColumn(
-                "Non-Native Views", 
-                format="%d", 
-                min_value=0, 
-                max_value=int(aggregated['Views'].max()) if not aggregated.empty else 100
-            )
-        }
-    )
-
-    # visualization of 10 15 articles
     if not aggregated.empty:
+        st.dataframe(
+            aggregated[['Page_Title', 'Views', 'language', 'wiki_url']],
+            use_container_width=True,
+            hide_index=True,
+            height=400,
+            column_config={
+                "Page_Title": st.column_config.TextColumn("Article Title"),
+                "language": st.column_config.TextColumn("Source Language"),
+                "wiki_url": st.column_config.LinkColumn("Read Original", display_text="Link"),
+                "Views": st.column_config.ProgressColumn(
+                    "Non-Native Views", 
+                    format="%d", 
+                    min_value=0, 
+                    max_value=int(aggregated['Views'].max()) if not aggregated.empty else 100
+                )
+            }
+        )
+
+        # visualization
         st.divider()
-        st.markdown("### View Distribution (Top 15 Articles)")
+        st.markdown("### View Distribution (Top 15 Filtered Articles)")
         chart_data = aggregated.head(15)
         chart = alt.Chart(chart_data).mark_bar(color='#007BFF', cornerRadiusEnd=8).encode(
             x=alt.X('Views:Q', title='Aggregate Non-Native Views'),
@@ -174,6 +189,8 @@ if not df.empty:
         ).properties(height=450)
         
         st.altair_chart(chart, use_container_width=True)
+    else:
+        st.info("Select a language above to view article recommendations.")
 
 else:
-    st.error("Data could not be loaded from 'data/african_countries_dpdp_views.zip'. Please verify the file path.")
+    st.error("Data could not be loaded. Please verify 'data/african_countries_dpdp_views.zip' exists.")
