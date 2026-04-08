@@ -86,18 +86,4 @@ Improving widely viewed articles has a multiplier effect:
 Rather than editing randomly, this tool helps prioritize **data-driven contributions**.
 """)
 
-# Data Source Section 
-st.header("Data Source")
-
-st.markdown("""
-The dataset used in this tool includes:
-- Wikipedia articles from WikiProject Africa  
-- Quality and importance ratings from the WikiProject  
-- Monthly median pageviews  
-
-These metrics are combined to identify where editorial effort can have the greatest impact.
-""")
-
-st.divider()
-
 st.info("Navigate to the main tool using the sidebar to start building your editorial worklist.")
