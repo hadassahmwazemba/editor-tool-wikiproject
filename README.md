@@ -6,8 +6,6 @@ A Streamlit app that helps Wikipedia editors find high-traffic, low-quality arti
 
 by Hadassah Mwazemba · Advised by Professor Eni Mustafaraj
 
----
-
 ## What it does
 
 - **Article Improvement Tool** — filter articles by quality and importance class, benchmark them against median pageviews, and export a worklist of articles that are widely read but under-developed.
@@ -21,9 +19,8 @@ by Hadassah Mwazemba · Advised by Professor Eni Mustafaraj
 
 ## Run it locally
 
-\`\`\`bash
-git clone https://github.com/hadassahmwazemba/editor-tool-wikiproject.git
-cd editor-tool-wikiproject
-pip install streamlit pandas
-streamlit run Welcome.py
-\`\`\`
+1. git clone https://github.com/hadassahmwazemba/editor-tool-wikiproject.git
+2. cd editor-tool-wikiproject
+3. pip install streamlit pandas
+4. streamlit run Welcome.py
+
